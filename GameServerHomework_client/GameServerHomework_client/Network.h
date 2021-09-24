@@ -21,3 +21,7 @@ int recvn(SOCKET s, char* buf, int len, int flags);
 //int netInit(int argc, char* argv[]);
 
 int netInit();
+
+DWORD sendKey(char* keybuf);
+
+int netclose();

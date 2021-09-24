@@ -1,5 +1,10 @@
 #include "Network.h"
 
+WSADATA wsa;
+SOCKET sock;
+SOCKADDR_IN serveraddr;
+int retval = 0;
+
 void err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -8,7 +13,7 @@ void err_quit(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+	MessageBox(NULL, (LPTSTR)lpMsgBuf, (LPCTSTR)msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
@@ -21,7 +26,7 @@ void err_display(const char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	cout << "[" << msg << "] " << (char*)lpMsgBuf;
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 }
 
@@ -43,19 +48,16 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 
 int netInit()
 {
-	int retval;
-
 	// 윈속 초기화
-	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 
+	sock = socket(AF_INET, SOCK_STREAM, 0);
+
 	// socket()
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) err_quit("socket()");
 
 	// connect()
-	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
@@ -100,5 +102,42 @@ int netInit()
 
 	//// 윈속종료
 	//WSACleanup();
-	//return 0;
+	return 0;
+}
+
+DWORD sendKey(char* keybuf)
+{
+	char buf[BUFSIZE];
+	int len;
+
+	strcpy_s(buf, BUFSIZE, keybuf);
+
+	// '\n'문자 제거
+	len = strlen(buf);
+	if (buf[len - 1] == '\n') buf[len - 1] = '\0';
+
+	// 데이터 보내기
+	retval = send(sock, buf, strlen(buf), 0);
+	if (retval == SOCKET_ERROR) { err_display("send()");}
+
+	// 데이터 받기
+	retval = recv(sock, buf, retval, 0); cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;
+	if (retval == SOCKET_ERROR) { err_display("rev()"); }
+
+	// 받은 데이터 처리
+	buf[retval] = '\0';
+	if (strcmp(buf, "up") == 0)
+		return 0x01;
+	
+	return NULL;
+}
+
+int netclose()
+{
+	// close socket()
+	closesocket(sock);
+
+	// 윈속종료
+	WSACleanup();
+	return 0;
 }

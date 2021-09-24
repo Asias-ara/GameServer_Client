@@ -3,6 +3,7 @@
 #include "Scene.h"
 #include "Camera.h"
 #include "Player.h"
+#include "Network.h"
 
 class CGameFramework
 {
