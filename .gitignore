@@ -1,9 +1,14 @@
 
 GameServerHomework_client/.vs
+GameServerHomework_server/.vs
 GameServerHomework_client/Debug
+GameServerHomework_server/Debug
 GameServerHomework_client/GameServerHomework_client/Debug
+GameServerHomework_server/GameServerHomework_server/Debug
 GameServerHomework_client/GameServerHomework_client/x64/Release
+GameServerHomework_server/GameServerHomework_server/x64/Release
 GameServerHomework_client/GameServerHomework_client/x64/Debug
+GameServerHomework_server/GameServerHomework_server/x64/Debug
 *.exe
 *.pdb
 *.user
