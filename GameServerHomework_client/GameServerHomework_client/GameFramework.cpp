@@ -476,6 +476,8 @@ void CGameFramework::ProcessInput()
 		if (pKeyBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
+		
+		std::cout << pKeyBuffer << endl;
 		if (pKeyBuffer[VK_UP] & 0xF0) {
 			//dwDirection |= DIR_FORWARD; 
 			dwDirection |= sendKey("up");

@@ -1,13 +1,15 @@
 #pragma comment(lib, "ws2_32")
 
-#include <WinSock2.h>
 #include <iostream>
+#include <WS2tcpip.h>
 #include <stdlib.h>
 
 using namespace std;
 
 #define SERVERPORT 4000
 #define BUFSIZE 512
+
+const char* SERVER_ADDR = "127.0.0.1";
 
 void err_quit(const char* msg)
 {
@@ -20,7 +22,7 @@ void err_quit(const char* msg)
 	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
-}
+};
 
 void err_display(const char* msg)
 {
@@ -44,7 +46,7 @@ int main(int argc, char* argv[])
 		return 1;
 
 	// socket()
-	SOCKET listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+	SOCKET listen_sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, 0);
 	if (listen_sock == INVALID_SOCKET) err_quit("socket()");
 
 	// bind()
@@ -53,6 +55,7 @@ int main(int argc, char* argv[])
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serveraddr.sin_port = htons(SERVERPORT);
+	// inet_pton(AF_INET, SERVER_ADDR, &serveraddr.sin_addr);
 	retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit("bind()");
 
