@@ -5,6 +5,7 @@
 #include <WS2tcpip.h>
 #include <iostream>
 #include <stdlib.h>
+#include <DirectXMath.h>
 
 #ifdef UNICODE
 #pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
@@ -27,6 +28,6 @@ int recvn(SOCKET s, char* buf, int len, int flags);
 
 int netInit();
 
-DWORD sendKey(char* keybuf);
+char* sendKey(char* keybuf);
 
 int netclose();

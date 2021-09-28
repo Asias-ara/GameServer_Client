@@ -465,7 +465,9 @@ void CGameFramework::MoveToNextFrame()
 void CGameFramework::ProcessInput()
 {
 	static UCHAR pKeyBuffer[256];
+	char* pKeyBufferNet;
 	DWORD dwDirection = 0;
+	char* recvPosition = NULL;
 	/*키보드의 상태 정보를 반환한다. 화살표 키(‘→’, ‘←’, ‘↑’, ‘↓’)를 누르면 플레이어를 오른쪽/왼쪽(로컬 x-축), 앞/
 	뒤(로컬 z-축)로 이동한다. ‘Page Up’과 ‘Page Down’ 키를 누르면 플레이어를 위/아래(로컬 y-축)로 이동한다.*/
 	if (::GetKeyboardState(pKeyBuffer))
@@ -477,14 +479,10 @@ void CGameFramework::ProcessInput()
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
 		
-		std::cout << pKeyBuffer << endl;
-		if (pKeyBuffer[VK_UP] & 0xF0) {
-			//dwDirection |= DIR_FORWARD; 
-			dwDirection |= sendKey("up");
-		}
-		if (pKeyBuffer[VK_DOWN] & 0xF0) dwDirection |= DIR_BACKWARD;
-		if (pKeyBuffer[VK_LEFT] & 0xF0) dwDirection |= DIR_LEFT;
-		if (pKeyBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
+		if (pKeyBuffer[VK_UP] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("up"));
+		if (pKeyBuffer[VK_DOWN] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("down"));
+		if (pKeyBuffer[VK_LEFT] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("left"));
+		if (pKeyBuffer[VK_RIGHT] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("right"));
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;
 	}
@@ -508,7 +506,7 @@ void CGameFramework::ProcessInput()
 		::SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 	}
 	//마우스 또는 키 입력이 있으면 플레이어를 이동하거나(dwDirection) 회전한다(cxDelta 또는 cyDelta).
-	if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+	if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f) || (recvPosition != NULL))
 	{
 		if (cxDelta || cyDelta)
 		{
@@ -521,8 +519,16 @@ void CGameFramework::ProcessInput()
 		}
 		/*플레이어를 dwDirection 방향으로 이동한다(실제로는 속도 벡터를 변경한다). 이동 거리는 시간에 비례하도록 한다. 
 		플레이어의 이동 속력은 (50/초)로 가정한다.*/
-		if (dwDirection) m_pPlayer->Move(dwDirection, 50.0f * m_GameTimer.GetTimeElapsed(),
-			true);
+		if (recvPosition != NULL) {
+			float x = *((float*)&recvPosition[2]);
+			float z = *((float*)&recvPosition[10]);
+			XMFLOAT3 moveFloat(x, m_pPlayer->GetPosition().y, z);
+			cout << "받은 좌표 : (" << x + 1 << "," << m_pPlayer->GetPosition().y - 5 << "," << z + 1 << ")" << endl;
+			m_pPlayer->SetPosition(moveFloat);
+		}
+
+		if (dwDirection) 
+			m_pPlayer->Move(dwDirection, 50.0f * m_GameTimer.GetTimeElapsed(), true);
 	}
 
 	//플레이어를 실제로 이동하고 카메라를 갱신한다. 중력과 마찰력의 영향을 속도 벡터에 적용한다. 

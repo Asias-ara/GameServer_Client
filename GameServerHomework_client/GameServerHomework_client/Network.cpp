@@ -114,13 +114,12 @@ int netInit()
 	return 0;
 }
 
-DWORD sendKey(char* keybuf)
+char* sendKey(char* keybuf)
 {
 	char buf[BUFSIZE];
 	int len;
 	DWORD send_byte;
 	WSABUF mybuf;
-
 	strcpy_s(buf, BUFSIZE, keybuf);
 
 	// '\n'문자 제거
@@ -130,24 +129,24 @@ DWORD sendKey(char* keybuf)
 	mybuf.len = len;
 
 	// 데이터 보내기
+	// retval = send(sock, buf, strlen(buf), 0);
 	retval = WSASend(sock, &mybuf, 1, &send_byte, 0, 0, 0);
 	if (retval == SOCKET_ERROR) { err_display("send()");}
 
 	// 데이터 받기
 	char recv_buf[BUFSIZE];
+
 	WSABUF mybuf_r;
 	mybuf_r.buf = recv_buf;
 	mybuf_r.len = BUFSIZE;
 	DWORD recv_byte;
 	DWORD recv_flag = 0;
-	retval = WSARecv(sock, &mybuf_r, 1, &recv_byte, &recv_flag, 0, 0); cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;
+	//retval = WSARecv(sock, &mybuf_r, 1, &recv_byte, &recv_flag, 0, 0);
+	retval = recv(sock, recv_buf, 15, 0); 
+	cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;\
 	if (retval == SOCKET_ERROR) { err_display("rev()"); }
-
-	// 받은 데이터 처리
-	if (strcmp(buf, "up") == 0)
-		return 0x01;
 	
-	return NULL;
+	return recv_buf;
 }
 
 int netclose()
