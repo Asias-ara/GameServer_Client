@@ -1,12 +1,25 @@
 
 GameServerHomework_client/.vs
 GameServerHomework_server/.vs
+GameServer_study/.vs
 GameServerHomework_client/Debug
 GameServerHomework_server/Debug
 GameServerHomework_client/GameServerHomework_client/Debug
 GameServerHomework_server/GameServerHomework_server/Debug
+GameServer_study/gameServer_study/Debug
+GameServer_study/gameServer_studyClient/Debug
+
+
 GameServerHomework_client/GameServerHomework_client/x64/Release
 GameServerHomework_server/GameServerHomework_server/x64/Release
+GameServer_study/char_Client/x64/Release
+GameServer_study/chat_Server/x64/Release
+GameServer_study/gameServer_study/x64/Release
+GameServer_study/gameServer_studyClient/x64/Release
+GameServer_study/Overlapped_echoClient/x64/Release
+GameServer_study/Overlapped_echoServer/x64/Release
+GameServer_study/Overlapped_echoMultiServer/x64/Release
+
 GameServerHomework_client/GameServerHomework_client/x64/Debug
 GameServerHomework_server/GameServerHomework_server/x64/Debug
 *.exe
