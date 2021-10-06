@@ -159,6 +159,7 @@ int main()
 		}
 	}
 	
+	// Nodelay¼³Á¤
 	int tcp_option = 1;
 	setsockopt(g_s_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char *>(&tcp_option), sizeof(tcp_option));
 

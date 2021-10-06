@@ -5,45 +5,128 @@ SOCKET sock;
 SOCKADDR_IN serveraddr;
 int retval = 0;
 
-void err_quit(const char* msg)
-{
-	LPVOID lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPTSTR)lpMsgBuf, (LPCTSTR)msg, MB_ICONERROR);
-	LocalFree(lpMsgBuf);
-	exit(1);
-}
+SOCKET g_s_socket;
+char g_recv_buf[BUFSIZE];
+
+WSABUF mybuf_recv;
+WSABUF mybuf;
+
+bool g_client_shutdown = false;
+
+void CALLBACK send_callback(DWORD err, DWORD num_byte, LPWSAOVERLAPPED send_over, DWORD flag);
+void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD flag);
 
 void err_display(const char* msg)
 {
 	LPVOID lpMsgBuf;
+
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, WSAGetLastError(),
+		NULL,
+		WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+		(LPTSTR)&lpMsgBuf,
+		0,
+		NULL);
+
+	cout << "[" << msg << "] " << (char*)lpMsgBuf << endl;
 	LocalFree(lpMsgBuf);
 }
 
-int recvn(SOCKET s, char* buf, int len, int flags)
+void err_quit(const char* msg)
 {
-	int received;
-	char* ptr = buf;
-	int left = len;
+	LPVOID lpMsgBuf;
 
-	while (left > 0) {
-		received = recv(s, ptr, left, flags);
-		if (received == SOCKET_ERROR) return SOCKET_ERROR;
-		else if (received == 0) break;
-		left -= received;
-		ptr += received;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		WSAGetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,
+		0,
+		NULL);
+
+	MessageBox(NULL, (LPTSTR)lpMsgBuf, (LPTSTR)msg, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+void do_send(char* keybuf)
+{
+	// 문자 받기
+	char buf[BUFSIZE];
+	strcpy_s(buf, BUFSIZE, keybuf);
+	int len = strlen(buf);
+	if (buf[len - 1] == '\n') buf[len - 1] = '\0';
+	// cin.getline(buf, BUFSIZE);
+
+	// send()
+	DWORD sent_byte;
+	mybuf.buf = buf;
+	mybuf.len = static_cast<ULONG>(strlen(buf)) + 1;
+
+	// Overlapped 추가사항
+	WSAOVERLAPPED* send_over = new WSAOVERLAPPED;
+	ZeroMemory(send_over, sizeof(send_over));
+
+
+
+	int ret = WSASend(g_s_socket, &mybuf, 1, &sent_byte, 0, send_over, send_callback);
+	if (ret == SOCKET_ERROR) {
+		int err_num = WSAGetLastError();
+		if (WSA_IO_PENDING != err_num) {
+			cout << " EROOR : SEND " << endl;
+			err_display("send()");
+		}
 	}
-	return (len - left);
+}
+
+void do_recv()
+{
+	// recv()
+	mybuf_recv.buf = g_recv_buf;
+	mybuf_recv.len = BUFSIZE;
+	DWORD recv_flag = 0;
+
+	WSAOVERLAPPED* recv_over = new WSAOVERLAPPED;
+	ZeroMemory(recv_over, sizeof(recv_over));
+
+	int ret = WSARecv(g_s_socket, &mybuf_recv, 1, 0, &recv_flag, recv_over, recv_callback);
+	if (ret == SOCKET_ERROR) {
+		int err_num = WSAGetLastError();
+		if (WSA_IO_PENDING != err_num) {
+			cout << " EROOR : RECV " << endl;
+			err_display("recv()");
+
+		}
+	}
+}
+
+void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD flag)
+{
+	delete recv_over;
+
+	char* p = g_recv_buf;
+
+	while (p < g_recv_buf + num_bytes) {
+		int type = *p;
+		char packet_size = *(p + 1);
+		int c_id = *(p + 2);
+
+		if(type == 1)
+			cout << "Server" << c_id << " sent : [" << packet_size - 3 << "] bytes : " << p + 3 << endl;
+
+		p = p + packet_size;
+	}
+
+	do_recv();
+}
+
+void CALLBACK send_callback(DWORD err, DWORD num_byte, LPWSAOVERLAPPED send_over, DWORD flag)
+{
+	cout << "요기요기" << endl;
+	delete send_over;
+	// do_send();
 }
 
 int netInit()
@@ -51,102 +134,61 @@ int netInit()
 
 	const char* SERVERIP;
 	char tempIP[16];
-	std::cout << "IP주소를 입력하세요 : ";
-	std::cin >> tempIP;
-	SERVERIP = tempIP;
+	//std::cout << "IP주소를 입력하세요 : ";
+	//std::cin >> tempIP;
+	//SERVERIP = tempIP;
+	SERVERIP = "127.0.0.1";
 
 	std::cout << SERVERIP << endl;
+
 	// 윈속 초기화
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		return 1;
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-
 	// socket()
-	if (sock == INVALID_SOCKET) err_quit("socket()");
+	// SOCKET s_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, 0);
+	g_s_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
+	if (g_s_socket == INVALID_SOCKET) err_quit("socket()");
 
 	// connect()
-	ZeroMemory(&serveraddr, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-	// inet_pton(AF_INET, SERVER_ADDR, &serveraddr.sin_addr);
-	retval = connect(sock, reinterpret_cast<sockaddr *>(&serveraddr), sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("connect()");
+	SOCKADDR_IN server_addr;
+	ZeroMemory(&server_addr, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(SERVERPORT);
+	inet_pton(AF_INET, SERVERIP, &server_addr.sin_addr);
+	int ret = connect(g_s_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr));
+	int err_num = WSAGetLastError();
+	if (ret == SOCKET_ERROR) {
+		int err_num = WSAGetLastError();
+		if (WSA_IO_PENDING != err_num) {
+			cout << " EROOR : Connect " << endl;
+			err_quit("connect()");
 
-	//// 데이터 통신에 사용할 변수
-	//char buf[BUFSIZE];
-	//int len;
+		}
+	}
 
-	//// 서버와 데이터 통신
-	//while (1) {
-	//	// 데이터 입력
-	//	cout << endl << "보낼데이터 : ";
-	//	if (fgets(buf, BUFSIZE + 1, stdin) == NULL) break;
+	// Nodelay설정
+	int tcp_option = 1;
+	setsockopt(g_s_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&tcp_option), sizeof(tcp_option));
+	do_recv();
 
-	//	// '\n'문자 제거
-	//	len = strlen(buf);
-	//	if (buf[len - 1] == '\n') buf[len - 1] = '\0';
-	//	if (strlen(buf) == 0) break;
-
-	//	// 데이터 보내기
-	//	retval = send(sock, buf, strlen(buf), 0);
-	//	if (retval == SOCKET_ERROR) { err_display("send()"); break; }
-	//	cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;
-
-	//	// 데이터 받기
-	//	retval = recv(sock, buf, retval, 0); cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;
-	//	if (retval == SOCKET_ERROR) { err_display("rev()"); break; }
-	//	else if (retval == 0) break;
-
-	//	// 받은 데이터 출력
-	//	buf[retval] = '\0';
-	//	cout << "[TCP 클라이언트] " << retval << "바이트를 받았습니다" << endl;
-	//	cout << "[받은데이터] " << buf << endl;
-
-	//}
-
-	//// close socket()
-	//closesocket(sock);
-
-	//// 윈속종료
-	//WSACleanup();
-	return 0;
+	// do_send();
 }
 
 char* sendKey(char* keybuf)
 {
-	char buf[BUFSIZE];
-	int len;
-	DWORD send_byte;
-	WSABUF mybuf;
-	strcpy_s(buf, BUFSIZE, keybuf);
+	//char buf[BUFSIZE];
+	//strcpy_s(buf, BUFSIZE, keybuf);
+	//len = strlen(buf);
+	//do_send(buf);
+	//// '\n'문자 제거
+	//if (buf[len - 1] == '\n') buf[len - 1] = '\0';
+	//mybuf.buf = buf;
+	//mybuf.len = len;
 
-	// '\n'문자 제거
-	len = strlen(buf);
-	if (buf[len - 1] == '\n') buf[len - 1] = '\0';
-	mybuf.buf = buf;
-	mybuf.len = len;
 
-	// 데이터 보내기
-	// retval = send(sock, buf, strlen(buf), 0);
-	retval = WSASend(sock, &mybuf, 1, &send_byte, 0, 0, 0);
-	if (retval == SOCKET_ERROR) { err_display("send()");}
-
-	// 데이터 받기
-	char recv_buf[BUFSIZE];
-
-	WSABUF mybuf_r;
-	mybuf_r.buf = recv_buf;
-	mybuf_r.len = BUFSIZE;
-	DWORD recv_byte;
-	DWORD recv_flag = 0;
-	//retval = WSARecv(sock, &mybuf_r, 1, &recv_byte, &recv_flag, 0, 0);
-	retval = recv(sock, recv_buf, 15, 0); 
-	cout << "[TCP 클라이언트] " << retval << "바이트를 보냈습니다" << endl;\
-	if (retval == SOCKET_ERROR) { err_display("rev()"); }
-	
-	return recv_buf;
+	//
+	//return recv_buf;
 }
 
 int netclose()

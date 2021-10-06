@@ -479,10 +479,14 @@ void CGameFramework::ProcessInput()
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
 		
-		if (pKeyBuffer[VK_UP] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("up"));
+		/*if (pKeyBuffer[VK_UP] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("up"));
 		if (pKeyBuffer[VK_DOWN] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("down"));
 		if (pKeyBuffer[VK_LEFT] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("left"));
-		if (pKeyBuffer[VK_RIGHT] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("right"));
+		if (pKeyBuffer[VK_RIGHT] & 0xF0) recvPosition = do_send(reinterpret_cast<char*>("right"));*/
+		if (pKeyBuffer[VK_UP] & 0xF0) do_send(reinterpret_cast<char*>("up"));
+		if (pKeyBuffer[VK_DOWN] & 0xF0) do_send(reinterpret_cast<char*>("down"));
+		if (pKeyBuffer[VK_LEFT] & 0xF0) do_send(reinterpret_cast<char*>("left"));
+		if (pKeyBuffer[VK_RIGHT] & 0xF0) do_send(reinterpret_cast<char*>("right"));
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;
 	}
