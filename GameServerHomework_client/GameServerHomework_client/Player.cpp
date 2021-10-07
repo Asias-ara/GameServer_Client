@@ -319,8 +319,8 @@ CAirplanePlayer::CAirplanePlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommand
 	CMesh *pAirplaneMesh = new CAirplaneMeshDiffused(pd3dDevice, pd3dCommandList, 2.0f, 2.0f, 6.0f, XMFLOAT4(1.0f, 0.0f, 0.0f, 0.5f));
 
 	SetMesh(pAirplaneMesh);
-	//플레이어의 카메라를 스페이스-쉽 카메라로 변경(생성)한다. 
-	m_pCamera = ChangeCamera(SPACESHIP_CAMERA, 0.0f);
+	//플레이어의 카메라를  3인칭 카메라로 변경(생성)한다. 
+	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	//플레이어를 위한 셰이더 변수를 생성한다.
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);

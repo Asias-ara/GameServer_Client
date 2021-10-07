@@ -160,7 +160,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYUP:
         gGameFramework.OnProcessingWindowMessage(hWnd, message, wParam, lParam);
         break;
-    case WM_DESTROY:
+    case WM_DESTROY:        // X눌렀을 때
         ::PostQuitMessage(0);
         break;
     default:

@@ -14,17 +14,30 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 void CALLBACK send_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED send_over, DWORD send_flag);
 void err_quit(const char* msg);
 void err_display(const char* msg);
-void move_player();
+void delete_session(int c_id);
+
+// 임시 색깔 지정
+float temp_colors[10][3] = { {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.9f, 0.9f, 0.9f}, {0.8f, 0.8f, 0.8f},
+							{0.7f, 0.7f, 0.7f} , {0.6f, 0.6f, 0.6f} , {0.6f, 0.6f, 0.6f},
+							{0.5f, 0.5f, 0.5f} , {0.4f, 0.4f, 0.4f} , {0.3f, 0.3f, 0.3f} };
 
 // 클래스 선언
+#pragma pack (push, 1)
+typedef struct player_packet {
+	short	size;				// 
+	int		id;					// id 값
+	float	r, g, b, a;			// 색깔값
+	float	x, y, z;			// 위치값
+	
+}PLAYER;
+#pragma pack (pop)
 
-// 패킷
 class EXP_OVER {
 public:
 	WSAOVERLAPPED	_wsa_over;
-	int				_type;
-	int				_s_id;
-	WSABUF			_wsa_buf;
+	int				_type;				// 타입 : 1 - 로그인, 2 - 이동, 3 - 로그아웃
+	int				_s_id;				// 클라이언트의 id
+	WSABUF			_wsa_buf;			// buf
 	char			_msg[BUFSIZE];		// num_bytes를 하면 new할당하며 오버헤드 일어나므로 통크게 확장
 public:
 	EXP_OVER()
@@ -32,14 +45,14 @@ public:
 
 	}
 
-	EXP_OVER(char type, char s_id, char num_bytes, char* mess) : _s_id(s_id)
+	EXP_OVER( char s_id, char num_bytes, char* mess, char type) : _s_id(s_id)
 	{
 		ZeroMemory(&_wsa_over, sizeof(_wsa_over));
 		_wsa_buf.buf = _msg;
 		_wsa_buf.len = num_bytes + 3;
 
 		memcpy(_msg + 3, mess, num_bytes);
-		cout << mess << endl;
+		cout << "EXP_OVER : " << mess << endl;
 		// 어떤 타입인지 넣어준다( 1 : 로그인, 2 : 이동, 3 : 로그아웃)
 		_msg[0] = type;
 		// 사이즈 검사를 원래 넣어야 한다.
@@ -57,12 +70,13 @@ public:
 // 세션
 class SESSION {
 private:
-	int		_id;
-	SOCKET	_socket;
-	WSABUF	_recv_wsabuf;
-	WSABUF	_send_wsabuf;
-	char	_buf[BUFSIZE];
-	WSAOVERLAPPED _recv_over;
+	int				_id;
+	PLAYER			_player;
+	SOCKET			_socket;
+	WSABUF			_recv_wsabuf;
+	WSABUF			_send_wsabuf;
+	char			_buf[BUFSIZE];
+	WSAOVERLAPPED	_recv_over;
 public:
 
 	SESSION()
@@ -77,6 +91,15 @@ public:
 		_recv_wsabuf.len = BUFSIZE;
 		_send_wsabuf.buf = _buf;
 		_send_wsabuf.len = 0;
+		
+		// 플레이어 정보 초기화
+		_player.size = sizeof(_player);
+		_player.id = _id;
+		if (id < 10) {
+			_player.r = temp_colors[id][0];	_player.g = temp_colors[id][1];	_player.b = temp_colors[id][2];	_player.a = 1;
+		}
+		_player.x = -1;	_player.y = 5;	_player.z = -1;
+
 	}
 	~SESSION()
 	{
@@ -101,30 +124,35 @@ public:
 			int err_num = WSAGetLastError();
 			if (WSA_IO_PENDING != err_num) {
 				if (WSAECONNRESET == err_num) {
-					closesocket(_socket);
+					delete_session(_id);
 				}
 				else {
-					cout << " EROOR : RECV " << endl;
+					cout << " EROOR : RECV " << err_num << endl;
 					err_display("recv()");
 				}
 			}
 		}
 	}
 
-	void do_send(int type, int sender_id, int num_bytes, char* mess)
+	void do_send(int type, int sender_id, DWORD num_bytes, char* mess)
 	{
-		cout << "send되냐1" << mess << endl;
 		// send()
-		EXP_OVER* ex_over = new EXP_OVER(type, sender_id, num_bytes, mess);
-		
+		int temp_num_bytes = num_bytes;
+		cout << temp_num_bytes << endl;
+		EXP_OVER* ex_over = new EXP_OVER( sender_id, temp_num_bytes, mess, type);
 		int ret = WSASend(_socket, &ex_over->_wsa_buf, 1, 0, 0, &ex_over->_wsa_over, send_callback);
+		
 		if (ret == SOCKET_ERROR) {
 			int err_num = WSAGetLastError();
 			if (WSA_IO_PENDING != err_num) {
-				cout << " EROOR : SEND " << endl;
-				err_display("send()");
+				if (WSAECONNRESET == err_num) {
+					delete_session(_id);
+				}
+				else {
+					cout << " EROOR : SEND " << endl;
+					err_display("send()");
+				}
 			}
-	
 		}
 	}
 
@@ -132,22 +160,60 @@ public:
 	{
 		return _buf;
 	}
+
+	PLAYER* send_player() {
+		return &_player;
+	}
+	void move_player()
+	{
+		char* mess = _buf + 1;
+		// 받은 데이터를 처리하기
+		DWORD dwDirection = 0;
+		if (strcmp(mess, "up") == 0) dwDirection |= 0x01;
+		if (strcmp(mess, "down") == 0) dwDirection |= 0x02;
+		if (strcmp(mess, "left") == 0) dwDirection |= 0x04;
+		if (strcmp(mess, "right") == 0) dwDirection |= 0x08;
+
+		// 여기서 좌표 수정
+		if (dwDirection) {
+			if (dwDirection & DIR_FORWARD) _player.z = _player.z + (50.0f * 0.01);
+			if (dwDirection & DIR_BACKWARD) _player.z = _player.z - (50.0f * 0.01);;
+			//화살표 키 ‘→’를 누르면 로컬 x-축 방향으로 이동한다. ‘←’를 누르면 반대 방향으로 이동한다. 
+			if (dwDirection & DIR_RIGHT) _player.x = _player.x + (50.0f * 0.01);
+			if (dwDirection & DIR_LEFT)  _player.x = _player.x - (50.0f * 0.01);
+		}
+	}
 };
 
 unordered_map<int, SESSION> clients;
 
 void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD recv_flag)
 {
-	cout << "recv_callback여긴 되냐2" << endl;
 	int s_id = reinterpret_cast<int>(recv_over->hEvent);
 
-	cout << "Client[" << s_id << "] sent : [" << num_bytes << "] bytes" << clients[s_id].recv_buf() << endl;
-
+	// 시도
+	char* p;
+	ZeroMemory(&p, sizeof(p));
+	p = clients[s_id].recv_buf();
+	int packet_size = *p;
+	cout << "Client[" << s_id << "] sent : [" << packet_size << "] bytes" << clients[s_id].recv_buf()+1 << endl;
+	clients[s_id].move_player();
+	
+	PLAYER* mess = clients[s_id].send_player();
+	int len = mess->size;
+	char* p_mess = reinterpret_cast<char*>(mess);
 	for (auto& cl : clients) {
-		//cl.second.do_send(s_id, num_bytes, clients[s_id].recv_buf());
+		cl.second.do_send(2, s_id, len, p_mess);
+	}
+	clients[s_id].do_recv();
+	//-----------
+
+
+	/*for (auto& cl : clients) {
+		cl.second.do_send(2, s_id, num_bytes, clients[s_id].recv_buf());
 	}
 
-	clients[s_id].do_recv();
+	clients[s_id].do_recv();*/
 	/*
 	EXP_OVER* ex_over = reinterpret_cast<EXP_OVER*>(recv_over);
 	char* recv_buf = ex_over->_msg;
@@ -184,19 +250,9 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 
 void CALLBACK send_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED send_over, DWORD send_flag)
 {
-	cout << "send_callbakc되냐2" << endl;
 	EXP_OVER* ex_over = reinterpret_cast<EXP_OVER*>(send_over);
 	delete ex_over;
 }
-
-#pragma pack (push, 1)
-struct move_packet {
-	short size;
-	char type;
-	float x, y, z;
-	float dx, dy, dz;
-};
-#pragma pack (pop)
 
 void err_quit(const char* msg)
 {
@@ -272,14 +328,30 @@ int main(int argc, char* argv[])
 		cout << "[TCP/" << inet_ntoa(c_addr.sin_addr) << ":" << ntohs(c_addr.sin_port) << "]" << endl;
 		clients.try_emplace(i, i, c_socket);
 		
-
-		char mess[6] = "login";
-		cout << strlen(mess) << endl;
+		// 새로 접속한 클라이언트에게 부여된 식별번호와 로그인 되어 있는 클라이언트들의 정보를 보내주기
+		PLAYER* mess = clients[i].send_player();
+		int len = mess->size;
+		char* p_mess = reinterpret_cast<char*>(mess);
+		clients[i].do_send(0, i, len, p_mess);
+		
+		// 새로 생성된 플레이어 정보 broadcasting
 		for (auto& cl : clients) {
-			cl.second.do_send(1, i, 6, mess);
+			cl.second.do_send(1, i, len, p_mess);
+		}
+		
+		// 새로 접속한 플레이어에게 모든 플레이어 정보 보내주기
+		for (auto& cl : clients) {
+			mess = cl.second.send_player();
+			len = mess->size;
+			int id = mess->id;
+			p_mess = reinterpret_cast<char*>(mess);
+			clients[i].do_send(1, id, len, p_mess);
 		}
 
+
+
 		clients[i].do_recv();
+		i++;
 	}
 
 	// close socket()
@@ -290,36 +362,17 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void move_player()
-{/*
-	// 받은 데이터 출력
-	buf[retval] = '\0';
-	cout << "[TCP/" << inet_ntoa(clientaddr.sin_addr) << ":" << ntohs(clientaddr.sin_port) << "]" << buf << endl;
+void delete_session(int c_id)
+{
+	clients.erase(c_id);
 
-	// 받은 데이터를 처리하기
-	DWORD dwDirection = 0;
-	if (strcmp(buf, "up") == 0) dwDirection |= 0x01;
-	if (strcmp(buf, "down") == 0) dwDirection |= 0x02;
-	if (strcmp(buf, "left") == 0) dwDirection |= 0x04;
-	if (strcmp(buf, "right") == 0) dwDirection |= 0x08;
+	// 여기서 로그아웃한 정보를 보내주자
+	char mess[7] = "logout";
+	cout << strlen(mess) << endl;
+	// 새로 생성된 플레이어 정보 계산
 
-	if (dwDirection) {
-		m_pPlayer->Move(dwDirection, 50.0f * 0.01, true);
-		m_pPlayer->printPosition();
+
+	for (auto& cl : clients) {
+		cl.second.do_send(3, c_id, 7, mess);
 	}
-
-	DWORD send_byte;
-	XMFLOAT3* sendFloat;
-	char p[BUFSIZE];
-
-	*sendFloat = m_pPlayer->sendPosition();
-	*((short*)(&buf[0])) = 14;
-	*((float*)(&buf[2])) = (*sendFloat).x;		// x좌표
-	*((float*)(&buf[6])) = (*sendFloat).y;		// y좌표
-	*((float*)(&buf[10])) = (*sendFloat).z;		// z좌표
-
-	// 데이터 보내기
-	retval = send(client_sock, buf, *((short*)&buf[0]), 0);
-	if (retval == SOCKET_ERROR) { err_display("send()"); break; }
-	*/
 }

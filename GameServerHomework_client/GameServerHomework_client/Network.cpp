@@ -1,5 +1,7 @@
 #include "Network.h"
 
+int my_id = 0;
+
 WSADATA wsa;
 SOCKET sock;
 SOCKADDR_IN serveraddr;
@@ -10,6 +12,16 @@ char g_recv_buf[BUFSIZE];
 
 WSABUF mybuf_recv;
 WSABUF mybuf;
+
+#pragma pack (push, 1)
+typedef struct player_packet {
+	short	size;				// 
+	int		id;					// id 값
+	float	r, g, b, a;			// 색깔값
+	float	x, y, z;			// 위치값
+
+}TPPLAYER;
+#pragma pack (pop)
 
 bool g_client_shutdown = false;
 
@@ -53,18 +65,26 @@ void err_quit(const char* msg)
 
 void do_send(char* keybuf)
 {
-	// 문자 받기
-	char buf[BUFSIZE];
+	// 문자 보내기(옛날버젼)
+	/*char buf[BUFSIZE];
 	strcpy_s(buf, BUFSIZE, keybuf);
 	int len = strlen(buf);
-	if (buf[len - 1] == '\n') buf[len - 1] = '\0';
-	// cin.getline(buf, BUFSIZE);
-
+	if (buf[len - 1] == '\n') buf[len - 1] = '\0';*/
+	
+	// 시도해보자
+	char buf[BUFSIZE];
+	ZeroMemory(&buf, sizeof(buf));
+	strcpy_s(buf+1, BUFSIZE, keybuf);
+	int len = strlen(keybuf);
+	if (buf[len] == '\n') buf[len] = '\0';
+	buf[0] = (char)len+1;
+	
 	// send()
 	DWORD sent_byte;
 	mybuf.buf = buf;
 	mybuf.len = static_cast<ULONG>(strlen(buf)) + 1;
 
+	cout << "길이 : " <<  mybuf.len << endl;
 	// Overlapped 추가사항
 	WSAOVERLAPPED* send_over = new WSAOVERLAPPED;
 	ZeroMemory(send_over, sizeof(send_over));
@@ -107,14 +127,32 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 	delete recv_over;
 
 	char* p = g_recv_buf;
-
 	while (p < g_recv_buf + num_bytes) {
+		cout << "여긴 들어오긴 하니" << endl;
 		int type = *p;
 		char packet_size = *(p + 1);
 		int c_id = *(p + 2);
+		TPPLAYER* tp = reinterpret_cast<TPPLAYER*>((p+3));
+		tp->x += 1;
+		tp->z += 1;
+		tp->y -= 5;
+		cout << "Server" << c_id << " sent : [" << packet_size - 3 << "] bytes : (" << tp->x  << ", " << tp->y << ", " << tp->z << ") " << endl;
+		if (type == 0) {
+			my_id = c_id;
+			cout << "나인가" << endl;
+		}
+		if (type == 1) // 아이디를 비교하고 자기자신이 아니라면 새로운 플레이어 그려주기
+		{
+			cout << "누구인가" << endl;
+		}
+		if (type == 2) {
+			// 아이디에 맞는 플레이어 움직여주기
+			cout << "이동이동";
+		}
+		if (type == 3) {
+			// id에 맞는 플레이어 삭제해주기
+		}
 
-		if(type == 1)
-			cout << "Server" << c_id << " sent : [" << packet_size - 3 << "] bytes : " << p + 3 << endl;
 
 		p = p + packet_size;
 	}
@@ -124,9 +162,7 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 
 void CALLBACK send_callback(DWORD err, DWORD num_byte, LPWSAOVERLAPPED send_over, DWORD flag)
 {
-	cout << "요기요기" << endl;
 	delete send_over;
-	// do_send();
 }
 
 int netInit()
@@ -171,8 +207,6 @@ int netInit()
 	int tcp_option = 1;
 	setsockopt(g_s_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&tcp_option), sizeof(tcp_option));
 	do_recv();
-
-	// do_send();
 }
 
 char* sendKey(char* keybuf)

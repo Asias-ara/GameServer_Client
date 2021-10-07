@@ -565,7 +565,7 @@ void CGameFramework::FrameAdvance()
 	//타이머의 시간이 갱신되도록 하고 프레임 레이트를 계산한다. 
 	m_GameTimer.Tick(0.0f);
 
-	ProcessInput();
+	ProcessInput();		// 입력 처리
 
 	AnimateObjects();
 

@@ -33,3 +33,5 @@ char* sendKey(char* keybuf);
 int netclose();
 
 void do_send(char* keybuf);
+
+void do_recv();
