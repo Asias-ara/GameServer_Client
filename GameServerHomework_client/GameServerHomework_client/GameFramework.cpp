@@ -1,8 +1,12 @@
 #include "stdafx.h"
 #include "GameFramework.h"
+#include "Network.h"
 
 CGameFramework::CGameFramework()
 {
+	cout << "네트워크 연결" << endl;
+	netInit();
+	Sleep(1000);
 	m_pdxgiFactory = NULL;
 	m_pdxgiSwapChain = NULL;
 	m_pd3dDevice = NULL;
@@ -92,6 +96,8 @@ void CGameFramework::OnDestroy()
 		DXGI_DEBUG_RLO_DETAIL);
 	pdxgiDebug->Release();
 #endif
+
+	netclose();
 }
 
 void CGameFramework::CreateSwapChain()
@@ -566,6 +572,10 @@ void CGameFramework::FrameAdvance()
 	m_GameTimer.Tick(0.0f);
 
 	ProcessInput();		// 입력 처리
+
+	// 플레이어의 위치 수정
+	m_pPlayer->SetPosition(return_myPosition());
+	m_pCamera->Move(return_myCamera());
 
 	AnimateObjects();
 

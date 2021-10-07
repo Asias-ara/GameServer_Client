@@ -1,7 +1,9 @@
 #include "Network.h"
+#include "GameObject.h"
 
 int my_id = 0;
-
+XMFLOAT3 my_position(-1.0f, 5.0f, -1.0f);
+XMFLOAT3 my_camera(0.0f, 0.0f, 0.0f);
 WSADATA wsa;
 SOCKET sock;
 SOCKADDR_IN serveraddr;
@@ -24,6 +26,8 @@ typedef struct player_packet {
 #pragma pack (pop)
 
 bool g_client_shutdown = false;
+
+unordered_map<int, CGameObject> mPlayer;
 
 void CALLBACK send_callback(DWORD err, DWORD num_byte, LPWSAOVERLAPPED send_over, DWORD flag);
 void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD flag);
@@ -84,7 +88,6 @@ void do_send(char* keybuf)
 	mybuf.buf = buf;
 	mybuf.len = static_cast<ULONG>(strlen(buf)) + 1;
 
-	cout << "길이 : " <<  mybuf.len << endl;
 	// Overlapped 추가사항
 	WSAOVERLAPPED* send_over = new WSAOVERLAPPED;
 	ZeroMemory(send_over, sizeof(send_over));
@@ -128,29 +131,39 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 
 	char* p = g_recv_buf;
 	while (p < g_recv_buf + num_bytes) {
-		cout << "여긴 들어오긴 하니" << endl;
 		int type = *p;
-		char packet_size = *(p + 1);
+		unsigned char packet_size = *(p + 1);
 		int c_id = *(p + 2);
 		TPPLAYER* tp = reinterpret_cast<TPPLAYER*>((p+3));
-		tp->x += 1;
-		tp->z += 1;
-		tp->y -= 5;
-		cout << "Server" << c_id << " sent : [" << packet_size - 3 << "] bytes : (" << tp->x  << ", " << tp->y << ", " << tp->z << ") " << endl;
+		if (packet_size <= 0) break;
+		cout << "Server" << c_id << " sent : [" << packet_size - 3 << "] bytes : (" << tp->x +1 << ", " << tp->y - 5 << ", " << tp->z  + 1<< ") " << endl;
 		if (type == 0) {
 			my_id = c_id;
-			cout << "나인가" << endl;
+			my_position.x = tp->x;
+			my_position.y = tp->y;
+			my_position.z = tp->z;
+
 		}
 		if (type == 1) // 아이디를 비교하고 자기자신이 아니라면 새로운 플레이어 그려주기
 		{
-			cout << "누구인가" << endl;
+			if (my_id != c_id) {
+				CGameObject* otherPlayer = new CGameObject;
+				otherPlayer->SetPosition(tp->x, tp->y, tp->z);
+				mPlayer.emplace(c_id, *otherPlayer);
+			}
 		}
 		if (type == 2) {
+			if (my_id == c_id) {
+				my_position.x = tp->x;
+				my_position.y = tp->y;
+				my_position.z = tp->z;
+			}
 			// 아이디에 맞는 플레이어 움직여주기
-			cout << "이동이동";
 		}
 		if (type == 3) {
 			// id에 맞는 플레이어 삭제해주기
+			// mPlayer[c_id].~CGameObject;
+			mPlayer.erase(c_id);
 		}
 
 
@@ -233,4 +246,12 @@ int netclose()
 	// 윈속종료
 	WSACleanup();
 	return 0;
+}
+
+XMFLOAT3 return_myPosition() {
+	return my_position;
+}
+
+XMFLOAT3 return_myCamera() {
+	return my_camera;
 }

@@ -45,18 +45,20 @@ public:
 
 	}
 
-	EXP_OVER( char s_id, char num_bytes, char* mess, char type) : _s_id(s_id)
+	EXP_OVER( char s_id, unsigned char num_bytes, char* mess, char type) : _s_id(s_id)
 	{
 		ZeroMemory(&_wsa_over, sizeof(_wsa_over));
 		_wsa_buf.buf = _msg;
 		_wsa_buf.len = num_bytes + 3;
 
 		memcpy(_msg + 3, mess, num_bytes);
-		cout << "EXP_OVER : " << mess << endl;
 		// 어떤 타입인지 넣어준다( 1 : 로그인, 2 : 이동, 3 : 로그아웃)
 		_msg[0] = type;
 		// 사이즈 검사를 원래 넣어야 한다.
-		_msg[1] = num_bytes + 3;
+		if (num_bytes > 255)
+			_msg[1] = num_bytes + 3;
+		else
+			_msg[1] = 34 + 3;
 		// 100명 이상 동접을 하면 id가 겹친다
 		_msg[2] = s_id;
 	}
@@ -78,6 +80,7 @@ private:
 	char			_buf[BUFSIZE];
 	WSAOVERLAPPED	_recv_over;
 public:
+	bool			_real;
 
 	SESSION()
 	{
@@ -100,6 +103,7 @@ public:
 		}
 		_player.x = -1;	_player.y = 5;	_player.z = -1;
 
+		_real = true;
 	}
 	~SESSION()
 	{
@@ -108,7 +112,6 @@ public:
 
 	void do_recv()
 	{
-		cout << "recv여긴 되냐1" << endl;
 		// recv()
 		int type = 0;
 		DWORD recv_flag = 0;
@@ -124,8 +127,10 @@ public:
 			int err_num = WSAGetLastError();
 			if (WSA_IO_PENDING != err_num) {
 				if (WSAECONNRESET == err_num) {
+					_real = false;
 					delete_session(_id);
 				}
+				else if (err_num == 10038) { _real = false; }
 				else {
 					cout << " EROOR : RECV " << err_num << endl;
 					err_display("recv()");
@@ -138,7 +143,6 @@ public:
 	{
 		// send()
 		int temp_num_bytes = num_bytes;
-		cout << temp_num_bytes << endl;
 		EXP_OVER* ex_over = new EXP_OVER( sender_id, temp_num_bytes, mess, type);
 		int ret = WSASend(_socket, &ex_over->_wsa_buf, 1, 0, 0, &ex_over->_wsa_over, send_callback);
 		
@@ -146,8 +150,10 @@ public:
 			int err_num = WSAGetLastError();
 			if (WSA_IO_PENDING != err_num) {
 				if (WSAECONNRESET == err_num) {
+					_real = false;
 					delete_session(_id);
 				}
+				else if (err_num == 10038) { _real = false; }
 				else {
 					cout << " EROOR : SEND " << endl;
 					err_display("send()");
@@ -341,13 +347,14 @@ int main(int argc, char* argv[])
 		
 		// 새로 접속한 플레이어에게 모든 플레이어 정보 보내주기
 		for (auto& cl : clients) {
-			mess = cl.second.send_player();
-			len = mess->size;
-			int id = mess->id;
-			p_mess = reinterpret_cast<char*>(mess);
-			clients[i].do_send(1, id, len, p_mess);
+			if (cl.second._real) {
+				mess = cl.second.send_player();
+				len = mess->size;
+				int id = mess->id;
+				p_mess = reinterpret_cast<char*>(mess);
+				clients[i].do_send(1, id, len, p_mess);
+			}
 		}
-
 
 
 		clients[i].do_recv();
@@ -364,11 +371,12 @@ int main(int argc, char* argv[])
 
 void delete_session(int c_id)
 {
-	clients.erase(c_id);
+	//delete &clients[c_id];
+	//clients.erase(c_id);
 
 	// 여기서 로그아웃한 정보를 보내주자
+	clients[c_id].~SESSION();
 	char mess[7] = "logout";
-	cout << strlen(mess) << endl;
 	// 새로 생성된 플레이어 정보 계산
 
 
@@ -376,3 +384,4 @@ void delete_session(int c_id)
 		cl.second.do_send(3, c_id, 7, mess);
 	}
 }
+

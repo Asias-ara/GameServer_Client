@@ -6,6 +6,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <DirectXMath.h>
+#include <unordered_map>
+
+#include "stdafx.h"
 
 #ifdef UNICODE
 #pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
@@ -18,11 +21,11 @@ using namespace std;
 #define SERVERPORT 4000
 #define BUFSIZE 512
 
+
 void err_quit(const char* msg);
 
 void err_display(const char* msg);
 
-int recvn(SOCKET s, char* buf, int len, int flags);
 
 // int netInit(int argc, char* argv[]);
 
@@ -35,3 +38,7 @@ int netclose();
 void do_send(char* keybuf);
 
 void do_recv();
+
+// float my_position2 = -1.0f;
+XMFLOAT3 return_myPosition();
+XMFLOAT3 return_myCamera();

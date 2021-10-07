@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "LabProject.h"
 #include "GameFramework.h"
-#include "Network.h"
 
 #define MAX_LOADSTRING 100
 
@@ -26,12 +25,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ LPWSTR    lpCmdLine,
     _In_ int       nCmdShow)
 {
-    wcout.imbue(locale("korean"));
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // network 연결
-    netInit();
+    // netInit();
 
     // TODO: 여기에 코드를 입력합니다.
 
@@ -66,11 +64,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         {
             gGameFramework.FrameAdvance();
         }
-        SleepEx(1, true);
+        SleepEx(0.001, true);
     }
     gGameFramework.OnDestroy();
 
-    netclose();
     return (int)msg.wParam;
 }
 
