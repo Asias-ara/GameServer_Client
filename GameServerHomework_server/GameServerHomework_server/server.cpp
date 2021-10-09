@@ -94,6 +94,7 @@ public:
 		_recv_wsabuf.len = BUFSIZE;
 		_send_wsabuf.buf = _buf;
 		_send_wsabuf.len = 0;
+
 		
 		// 플레이어 정보 초기화
 		_player.size = sizeof(_player);
@@ -101,7 +102,7 @@ public:
 		if (id < 10) {
 			_player.r = temp_colors[id][0];	_player.g = temp_colors[id][1];	_player.b = temp_colors[id][2];	_player.a = 1;
 		}
-		_player.x = -1;	_player.y = 5;	_player.z = -1;
+		_player.x = 0;	_player.y = 5;	_player.z = 0;
 
 		_real = true;
 	}
@@ -143,6 +144,7 @@ public:
 	{
 		// send()
 		int temp_num_bytes = num_bytes;
+		cout <<"보내는 크기 : " << num_bytes << endl;
 		EXP_OVER* ex_over = new EXP_OVER( sender_id, temp_num_bytes, mess, type);
 		int ret = WSASend(_socket, &ex_over->_wsa_buf, 1, 0, 0, &ex_over->_wsa_over, send_callback);
 		
@@ -182,11 +184,11 @@ public:
 
 		// 여기서 좌표 수정
 		if (dwDirection) {
-			if (dwDirection & DIR_FORWARD) _player.z = _player.z + (50.0f * 0.01);
-			if (dwDirection & DIR_BACKWARD) _player.z = _player.z - (50.0f * 0.01);;
+			if (dwDirection & DIR_FORWARD) _player.z = _player.z + (50.0f * 0.1);
+			if (dwDirection & DIR_BACKWARD) _player.z = _player.z - (50.0f * 0.1);;
 			//화살표 키 ‘→’를 누르면 로컬 x-축 방향으로 이동한다. ‘←’를 누르면 반대 방향으로 이동한다. 
-			if (dwDirection & DIR_RIGHT) _player.x = _player.x + (50.0f * 0.01);
-			if (dwDirection & DIR_LEFT)  _player.x = _player.x - (50.0f * 0.01);
+			if (dwDirection & DIR_RIGHT) _player.x = _player.x + (50.0f * 0.1);
+			if (dwDirection & DIR_LEFT)  _player.x = _player.x - (50.0f * 0.1);
 		}
 	}
 };
@@ -376,12 +378,15 @@ void delete_session(int c_id)
 
 	// 여기서 로그아웃한 정보를 보내주자
 	clients[c_id].~SESSION();
-	char mess[7] = "logout";
-	// 새로 생성된 플레이어 정보 계산
-
-
+	PLAYER* mess = clients[c_id].send_player();
+	mess->x = 256;	// 가끔씩 발생하는 예외처리를 위해서
+	int len = mess->size;
+	char* p_mess = reinterpret_cast<char*>(mess);
 	for (auto& cl : clients) {
-		cl.second.do_send(3, c_id, 7, mess);
+		cl.second.do_send(3, c_id, len, p_mess);
+	}
+	for (auto& cl : clients) {
+		cl.second.do_send(3, c_id, len, p_mess);
 	}
 }
 

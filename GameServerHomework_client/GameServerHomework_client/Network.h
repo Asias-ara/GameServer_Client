@@ -42,3 +42,8 @@ void do_recv();
 // float my_position2 = -1.0f;
 XMFLOAT3 return_myPosition();
 XMFLOAT3 return_myCamera();
+
+
+#include "Camera.h"
+#include "GameObject.h"
+void return_otherPlayer(CPlayer** m_otherPlayer, ID3D12Device* m_pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);

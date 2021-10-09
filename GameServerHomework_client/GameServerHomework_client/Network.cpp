@@ -1,5 +1,5 @@
 #include "Network.h"
-#include "GameObject.h"
+#include "Player.h"
 
 int my_id = 0;
 XMFLOAT3 my_position(-1.0f, 5.0f, -1.0f);
@@ -26,8 +26,6 @@ typedef struct player_packet {
 #pragma pack (pop)
 
 bool g_client_shutdown = false;
-
-unordered_map<int, CGameObject> mPlayer;
 
 void CALLBACK send_callback(DWORD err, DWORD num_byte, LPWSAOVERLAPPED send_over, DWORD flag);
 void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD flag);
@@ -125,6 +123,9 @@ void do_recv()
 	}
 }
 
+unordered_map<int, CPlayer> mPlayer;
+unordered_map<int, bool> check_createShader;
+
 void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_over, DWORD flag)
 {
 	delete recv_over;
@@ -147,9 +148,10 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 		if (type == 1) // 아이디를 비교하고 자기자신이 아니라면 새로운 플레이어 그려주기
 		{
 			if (my_id != c_id) {
-				CGameObject* otherPlayer = new CGameObject;
-				otherPlayer->SetPosition(tp->x, tp->y, tp->z);
+				CPlayer* otherPlayer = new CPlayer;
+				otherPlayer->SetPosition(XMFLOAT3(tp->x, tp->y, tp->z));
 				mPlayer.emplace(c_id, *otherPlayer);
+				check_createShader.emplace(c_id, true);
 			}
 		}
 		if (type == 2) {
@@ -158,13 +160,17 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED recv_ove
 				my_position.y = tp->y;
 				my_position.z = tp->z;
 			}
+			else {
+				mPlayer[c_id].SetPosition(XMFLOAT3(tp->x, tp->y, tp->z));
+			}
 			// 아이디에 맞는 플레이어 움직여주기
 		}
-		if (type == 3) {
+		if (type == 3 || tp->x > 200) {
 			// id에 맞는 플레이어 삭제해주기
 			// mPlayer[c_id].~CGameObject;
-			mPlayer.erase(c_id);
+			check_createShader[c_id] = false;
 		}
+
 
 
 		p = p + packet_size;
@@ -250,6 +256,18 @@ int netclose()
 
 XMFLOAT3 return_myPosition() {
 	return my_position;
+}
+void return_otherPlayer(CPlayer** m_otherPlayer, ID3D12Device* m_pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) {
+	for (auto& k : mPlayer) {
+		if (check_createShader[k.first] == true) {
+			m_otherPlayer[k.first]->SetPosition(k.second.GetPosition());
+			m_otherPlayer[k.first]->Render(pd3dCommandList, pCamera);
+		}
+		if (check_createShader[k.first] == false) {
+			/*check_createShader.erase(k.first);
+			mPlayer.erase(k.first);*/
+		}
+	}
 }
 
 XMFLOAT3 return_myCamera() {

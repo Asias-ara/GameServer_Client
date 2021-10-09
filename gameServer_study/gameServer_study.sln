@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chat_Server", "chat_Server\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "char_Client", "char_Client\char_Client.vcxproj", "{00F626EA-D723-45FC-86B7-4D4E31967AF2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IOCP_Server", "IOCP_Server\IOCP_Server.vcxproj", "{6690D241-216C-47FD-A7C0-2B119FD2EBF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{00F626EA-D723-45FC-86B7-4D4E31967AF2}.Release|x64.Build.0 = Release|x64
 		{00F626EA-D723-45FC-86B7-4D4E31967AF2}.Release|x86.ActiveCfg = Release|Win32
 		{00F626EA-D723-45FC-86B7-4D4E31967AF2}.Release|x86.Build.0 = Release|Win32
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Debug|x64.ActiveCfg = Debug|x64
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Debug|x64.Build.0 = Debug|x64
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Debug|x86.ActiveCfg = Debug|Win32
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Debug|x86.Build.0 = Debug|Win32
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Release|x64.ActiveCfg = Release|x64
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Release|x64.Build.0 = Release|x64
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Release|x86.ActiveCfg = Release|Win32
+		{6690D241-216C-47FD-A7C0-2B119FD2EBF2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

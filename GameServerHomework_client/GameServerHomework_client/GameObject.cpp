@@ -47,6 +47,7 @@ void CGameObject::OnPrepareRender()
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
+
 	OnPrepareRender();
 
 	//객체의 정보를 셰이더 변수(상수 버퍼)로 복사한다.
@@ -55,7 +56,9 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
 	
 	//게임 객체에 메쉬가 연결되어 있으면 메쉬를 렌더링한다. 
-	if (m_pMesh) m_pMesh->Render(pd3dCommandList);
+	if (m_pMesh) {
+		m_pMesh->Render(pd3dCommandList);
+	}
 }
 
 //인스턴싱 정점 버퍼 뷰를 사용하여 메쉬를 렌더링한다.

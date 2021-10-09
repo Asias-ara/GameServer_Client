@@ -1,0 +1,40 @@
+﻿  IocpServer.cpp
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(35,18): error C2065: '_send_msg': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(38,10): error C2065: '_send_msg': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(40,3): error C2065: '_send_msg': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(42,3): error C2065: '_send_msg': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(81,1): error C7538: 'array<CLIENT,10>'은(는) 변수 템플릿이 아닙니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(81,19): error C2146: 구문 오류: ';'이(가) 'clientss' 식별자 앞에 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(81,27): error C4430: 형식 지정자가 없습니다. int로 가정합니다. 참고: C++에서는 기본 int를 지원하지 않습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(67,3): error C3861: 'init_ex_over': 식별자를 찾을 수 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(120,2): error C2065: 'EXP_OVER': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(120,12): error C2065: 'ex_over': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(120,39): error C2061: 구문 오류: 식별자 'EXP_OVER'
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(121,9): error C2065: 'ex_over': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(121,16): error C2541: 'delete': 포인터가 아닌 개체를 삭제할 수 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(126,52): warning C4311: 'reinterpret_cast': 'HANDLE'에서 'int'(으)로 포인터가 잘립니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(126,52): warning C4302: 'reinterpret_cast': 'HANDLE'에서 'int'(으)로 잘립니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(128,73): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,18): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,18): error C2672: 'begin': 일치하는 오버로드된 함수가 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C2893: 함수 템플릿 'unknown-type std::begin(_Container &)'을(를) 특수화하지 못했습니다.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30037\include\xutility(1916): message : 'std::begin' 선언을 참조하십시오.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): message : 다음 템플릿 인수 사용:
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): message : '_Container=unknown-type'
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C2784: 'const _Elem *std::begin(std::initializer_list<_Elem>) noexcept': 'std::initializer_list<_Elem>'의 템플릿 인수를 'unknown-type'에서 추론할 수 없습니다.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30037\include\initializer_list(57): message : 'std::begin' 선언을 참조하십시오.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,18): error C2672: 'end': 일치하는 오버로드된 함수가 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C2893: 함수 템플릿 'unknown-type std::end(_Container &)'을(를) 특수화하지 못했습니다.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30037\include\xutility(1926): message : 'std::end' 선언을 참조하십시오.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): message : 다음 템플릿 인수 사용:
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): message : '_Container=unknown-type'
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C2784: 'const _Elem *std::end(std::initializer_list<_Elem>) noexcept': 'std::initializer_list<_Elem>'의 템플릿 인수를 'unknown-type'에서 추론할 수 없습니다.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30037\include\initializer_list(63): message : 'std::end' 선언을 참조하십시오.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C3536: '<begin>$L0': 초기화되기 전에 사용할 수 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,27): error C3536: '<end>$L0': 초기화되기 전에 사용할 수 없습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(130,25): error C2100: 간접 참조가 잘못되었습니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(131,38): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(134,2): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(168,3): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(169,3): error C2065: 'clients': 선언되지 않은 식별자입니다.
+C:\Users\ASIAS\Desktop\GameServer_Client\gameServer_study\IOCP_Server\IocpServer.cpp(172,2): error C2065: 'clients': 선언되지 않은 식별자입니다.

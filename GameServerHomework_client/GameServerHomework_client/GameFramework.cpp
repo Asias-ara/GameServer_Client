@@ -2,6 +2,7 @@
 #include "GameFramework.h"
 #include "Network.h"
 
+
 CGameFramework::CGameFramework()
 {
 	cout << "네트워크 연결" << endl;
@@ -34,6 +35,7 @@ CGameFramework::CGameFramework()
 	m_nWndClientWidth = FRAME_BUFFER_WIDTH;
 	m_nWndClientHeight = FRAME_BUFFER_HEIGHT;
 
+	
 	_tcscpy_s(m_pszFrameRate, _T("LapProject ("));
 }
 
@@ -351,6 +353,16 @@ void CGameFramework::BuildObjects()
 	m_pScene = new CScene();
 	m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 
+
+	// 다른 플레이어를 불러오기 위해 만들어 놓는 것
+	
+	for (int i = 0; i < 10; ++i) {
+		CAirplanePlayer* pOtherPlayer = new CAirplanePlayer(m_pd3dDevice,
+			m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
+		m_pOthers[i] = pOtherPlayer;
+	}
+
+
 	CAirplanePlayer* pAirplanePlayer = new CAirplanePlayer(m_pd3dDevice,
 		m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
 	m_pPlayer = pAirplanePlayer;
@@ -484,19 +496,45 @@ void CGameFramework::ProcessInput()
 		if (pKeyBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
-		
+
 		/*if (pKeyBuffer[VK_UP] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("up"));
 		if (pKeyBuffer[VK_DOWN] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("down"));
 		if (pKeyBuffer[VK_LEFT] & 0xF0) recvPosition = sendKey(reinterpret_cast<char*>("left"));
 		if (pKeyBuffer[VK_RIGHT] & 0xF0) recvPosition = do_send(reinterpret_cast<char*>("right"));*/
-		if (pKeyBuffer[VK_UP] & 0xF0) do_send(reinterpret_cast<char*>("up"));
-		if (pKeyBuffer[VK_DOWN] & 0xF0) do_send(reinterpret_cast<char*>("down"));
-		if (pKeyBuffer[VK_LEFT] & 0xF0) do_send(reinterpret_cast<char*>("left"));
-		if (pKeyBuffer[VK_RIGHT] & 0xF0) do_send(reinterpret_cast<char*>("right"));
+			
+		if (pKeyBuffer[VK_UP] & 0xF0) {
+			if (!press_keyboard[0]) {
+				press_keyboard[0] = true;
+				do_send(reinterpret_cast<char*>("up"));
+			}
+		}else press_keyboard[0] = false;
+
+		if (pKeyBuffer[VK_DOWN] & 0xF0) {
+			if (!press_keyboard[1]) {
+				press_keyboard[1] = true;
+				do_send(reinterpret_cast<char*>("down"));
+			}
+		} else press_keyboard[1] = false;
+
+		if (pKeyBuffer[VK_LEFT] & 0xF0) {
+			if (!press_keyboard[2]) {
+				press_keyboard[2] = true;
+				do_send(reinterpret_cast<char*>("left"));
+			}
+		}else press_keyboard[2] = false;
+
+		if (pKeyBuffer[VK_RIGHT] & 0xF0) {
+			if (!press_keyboard[3]) {
+				press_keyboard[3] = true;
+				do_send(reinterpret_cast<char*>("right"));
+			}
+		}else press_keyboard[3] = false;
+			
+		
+		
 		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;
 	}
-
 	float cxDelta = 0.0f, cyDelta = 0.0f;
 	POINT ptCursorPos;
 	/*마우스를 캡쳐했으면 마우스가 얼마만큼 이동하였는 가를 계산한다. 마우스 왼쪽 또는 오른쪽 버튼이 눌러질 때의
@@ -626,8 +664,14 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle,
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 #endif
-	//3인칭 카메라일 때 플레이어를 렌더링한다. 
+	//3인칭 카메라일 때 플레이어를 렌더링한다.
+	return_otherPlayer(m_pOthers, m_pd3dDevice, m_pd3dCommandList, m_pCamera);
+	
+	
+	// if (m_pOthers) m_pOthers->Render(m_pd3dCommandList, m_pCamera);
+	
 	if (m_pPlayer) m_pPlayer->Render(m_pd3dCommandList, m_pCamera);
+
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

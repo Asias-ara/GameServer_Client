@@ -106,10 +106,17 @@ public:
 	CCamera* m_pCamera = NULL;
 
 public:
+
+	// 다른 접속한 플레이어 객체에 대한 포인터이다.
+	CPlayer* m_pOthers[10] = { NULL };
+
 	//플레이어 객체에 대한 포인터이다.
 	CPlayer* m_pPlayer = NULL;
 
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다. 
 	POINT m_ptOldCursorPos;
+
+	// 키보드가 눌리고 있는 상태인지 알려주는 변수이다
+	bool press_keyboard[4] = { false, false, false, false };
 };
 
