@@ -51,7 +51,6 @@ private:
 	int		_id;
 	SOCKET	_socket;
 	WSABUF	_recv_wsabuf;
-	WSABUF	_send_wsabuf;
 	char	_recv_buf[BUFSIZE];
 	WSAOVERLAPPED _recv_over;
 public:
@@ -66,8 +65,6 @@ public:
 	{
 		_recv_wsabuf.buf = _recv_buf;
 		_recv_wsabuf.len = BUFSIZE;
-		_send_wsabuf.buf = _recv_buf;
-		_send_wsabuf.len = 0;
 	}
 	~SESSION()
 	{
